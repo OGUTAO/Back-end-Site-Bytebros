@@ -21,7 +21,9 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Arquivo .env não encontrado - usando variáveis de ambiente do sistema")
 	}
-
+	
+	gin.SetMode(gin.DebugMode)
+	
 	database.InitDB()
 	defer database.CloseDB()
 
@@ -150,6 +152,11 @@ func main() {
 	router.POST("/api/admin/login", handlers.LoginAdmin)
 
 	router.POST("/api/chatbot", handlers.ChatbotHandler)
+	
+	router.NoRoute(func(c *gin.Context) {
+        log.Printf("DEBUG: Rota não encontrada. Método: %s, Caminho: %s", c.Request.Method, c.Request.URL.Path)
+        c.JSON(http.StatusNotFound, gin.H{"erro": "Rota não encontrada", "caminho_requisitado": c.Request.URL.Path})
+    })
 
 	server := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),

@@ -36,13 +36,6 @@ func main() {
 	router := gin.Default()
 	router.RedirectTrailingSlash = false
 
-	// ROTA DE TESTE ADICIONADA AQUI PARA DIAGNÓSTICO
-	router.POST("/test/register", func(c *gin.Context) {
-		log.Println("DEBUG: ROTA DE TESTE /test/register FOI ATINGIDA!")
-		c.JSON(http.StatusOK, gin.H{"message": "A rota de teste /test/register funcionou!"})
-	})
-	// FIM DA ROTA DE TESTE
-
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"https://bytebros.netlify.app"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}

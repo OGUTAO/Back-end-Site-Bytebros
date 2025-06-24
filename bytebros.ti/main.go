@@ -43,7 +43,6 @@ func main() {
 	})
 	// FIM DA ROTA DE TESTE
 
-	// Configuração de CORS (já está correta)
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"https://bytebros.netlify.app"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
@@ -156,7 +155,7 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr:    ":" + os.Getenv("PORT"),
+		Addr:    ":" + os.Getenv("PORT"), // Espaço corrigido aqui
 		Handler: router,
 	}
 

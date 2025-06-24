@@ -36,8 +36,10 @@ func main() {
 
 	router.RedirectTrailingSlash = false
 
+	// SEÇÃO CORS: AJUSTE AQUI
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"https://bytebros.netlify.app"}
+	// Mude a linha abaixo de []string{"*"} para o domínio exato do seu frontend
+	config.AllowOrigins = []string{"https://bytebros.netlify.app"} // <-- MUDANÇA CRÍTICA AQUI
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With"}
 	config.ExposeHeaders = []string{"Content-Length"}
@@ -45,6 +47,7 @@ func main() {
 	config.MaxAge = 12 * time.Hour
 	config.AddAllowHeaders("x-requested-with")
 	router.Use(cors.New(config))
+	// FIM DA SEÇÃO CORS
 
 	router.Use(func(c *gin.Context) {
 		c.Set("db", database.DB)

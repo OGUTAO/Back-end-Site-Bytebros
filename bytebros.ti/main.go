@@ -21,7 +21,6 @@ func main() {
 		log.Println("Arquivo .env não encontrado - usando variáveis de ambiente do sistema")
 	}
 
-	// ---> ADIÇÃO 1: HABILITA LOGS DETALHADOS DO GIN
 	gin.SetMode(gin.DebugMode)
 
 	database.InitDB()
@@ -36,6 +35,13 @@ func main() {
 
 	router := gin.Default()
 	router.RedirectTrailingSlash = false
+
+	// ROTA DE TESTE ADICIONADA AQUI PARA DIAGNÓSTICO
+	router.POST("/test/register", func(c *gin.Context) {
+		log.Println("DEBUG: ROTA DE TESTE /test/register FOI ATINGIDA!")
+		c.JSON(http.StatusOK, gin.H{"message": "A rota de teste /test/register funcionou!"})
+	})
+	// FIM DA ROTA DE TESTE
 
 	// Configuração de CORS (já está correta)
 	config := cors.DefaultConfig()
@@ -144,7 +150,6 @@ func main() {
 	router.POST("/api/chatbot", handlers.ChatbotHandler)
 	// --- FIM DAS SUAS ROTAS ---
 
-	// ---> ADIÇÃO 2: CAPTURA QUALQUER ROTA NÃO ENCONTRADA PARA DEPURAÇÃO
 	router.NoRoute(func(c *gin.Context) {
 		log.Printf("DEBUG: Rota não encontrada. Método: %s, Caminho: %s", c.Request.Method, c.Request.URL.Path)
 		c.JSON(http.StatusNotFound, gin.H{"erro": "Rota não encontrada", "caminho_requisitado": c.Request.URL.Path})

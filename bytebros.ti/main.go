@@ -21,7 +21,8 @@ func main() {
 		log.Println("Arquivo .env não encontrado - usando variáveis de ambiente do sistema")
 	}
 
-	gin.SetMode(gin.DebugMode) // Manter o modo debug é útil
+	// Manter o modo debug é útil para ver os logs de requisição no Render
+	gin.SetMode(gin.DebugMode)
 
 	database.InitDB()
 	defer database.CloseDB()
@@ -50,7 +51,7 @@ func main() {
 		c.Next()
 	})
 
-	// --- ROTAS ORIGINAIS ---
+	// --- ROTAS DA APLICAÇÃO ---
 	router.GET("/api/noticias", handlers.ListarNoticias)
 	router.GET("/api/noticias/:id", handlers.ObterNoticia)
 
@@ -76,15 +77,73 @@ func main() {
 		authRoutes.POST("/funcionarios/login", handlers.LoginFuncionario)
 	}
 
-    // ... (COLE O RESTANTE DAS SUAS ROTAS AQUI, COMO ESTAVAM ORIGINALMENTE)
-    protected := router.Group("/api")
+	protected := router.Group("/api")
 	protected.Use(handlers.AuthMiddleware())
 	{
-		// ...
-	}
-    // ... etc
+		protected.GET("/perfil", handlers.ObterPerfil)
+		protected.POST("/pedidos", handlers.CriarPedido)
+		protected.GET("/meus-pedidos", handlers.ListarPedidosCliente)
+		protected.GET("/minhas-interacoes", handlers.ListarInteracoesCliente)
+		protected.POST("/chatbot/suporte", handlers.ChatbotSupportRequest)
+		protected.PUT("/usuarios/email", handlers.AtualizarEmailUsuario)
+		protected.PUT("/usuarios/telefone", handlers.AtualizarTelefoneUsuario)
 
-	// Handler para rotas não encontradas (manter é útil para depuração)
+		adminRoutes := protected.Group("/admin")
+		adminRoutes.Use(handlers.AdminMiddleware())
+		{
+			adminRoutes.DELETE("/administradores/:id", handlers.DeletarAdministrador)
+			adminRoutes.GET("/funcionarios", handlers.ListarFuncionarios)
+			adminRoutes.GET("/usuarios", handlers.ListarUsuarios)
+			adminRoutes.GET("/pedidos", handlers.ListarPedidosAdmin)
+			adminRoutes.PUT("/pedidos/:id/status", handlers.AtualizarStatusPedido)
+			adminRoutes.DELETE("/pedidos/:id", handlers.DeletarPedido)
+			adminRoutes.POST("/noticias", handlers.CriarNoticia)
+			adminRoutes.PUT("/noticias/:id", handlers.AtualizarNoticia)
+			adminRoutes.DELETE("/noticias/:id", handlers.DeletarNoticia)
+			adminRoutes.GET("/orcamentos", handlers.ListarOrcamentos)
+			adminRoutes.GET("/orcamentos/:id", handlers.ObterOrcamento)
+			adminRoutes.PUT("/orcamentos/:id/status", handlers.AtualizarStatusOrcamento)
+			adminRoutes.DELETE("/orcamentos/:id", handlers.DeletarOrcamento)
+		}
+	}
+
+	servicosRoutes := router.Group("/api/servicos")
+	{
+		servicosRoutes.GET("/", handlers.ListarServicos)
+		servicosRoutes.GET("/:id", handlers.ObterServico)
+		adminServicos := servicosRoutes.Group("/")
+		adminServicos.Use(handlers.AuthMiddleware(), handlers.AdminMiddleware())
+		{
+			adminServicos.POST("/", handlers.CriarServico)
+			adminServicos.PUT("/:id", handlers.AtualizarServico)
+			adminServicos.DELETE("/:id", handlers.DeletarServico)
+		}
+	}
+
+	suporteRoutes := router.Group("/api/suporte")
+	{
+		suporteRoutes.POST("", handlers.CriarMensagemSuporte)
+		adminSuporte := suporteRoutes.Group("")
+		adminSuporte.Use(handlers.AuthMiddleware(), handlers.AdminMiddleware())
+		{
+			adminSuporte.GET("", handlers.ListarMensagensSuporte)
+			adminSuporte.GET("/:id", handlers.ObterMensagemSuporte)
+			adminSuporte.PUT("/:id/status", handlers.AtualizarStatusSuporte)
+			adminSuporte.DELETE("/:id", handlers.DeletarSuporte)
+		}
+	}
+
+	adminRoutes := router.Group("/api/admin")
+	adminRoutes.Use(handlers.AuthMiddleware(), handlers.AdminMiddleware())
+	{
+		adminRoutes.POST("/administradores", handlers.CriarAdministrador)
+		adminRoutes.GET("/dashboard", handlers.AdminDashboard)
+	}
+
+	router.POST("/api/admin/login", handlers.LoginAdmin)
+	router.POST("/api/chatbot", handlers.ChatbotHandler)
+
+	// Handler para rotas não encontradas
 	router.NoRoute(func(c *gin.Context) {
 		log.Printf("DEBUG: Rota não encontrada. Método: %s, Caminho: %s", c.Request.Method, c.Request.URL.Path)
 		c.JSON(http.StatusNotFound, gin.H{"erro": "Rota não encontrada", "caminho_requisitado": c.Request.URL.Path})
